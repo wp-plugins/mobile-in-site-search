@@ -15,6 +15,9 @@ define('SEARCHY_SITE_BY_ERRNIO_INSTALLER_NAME', 'wordpress_searchy_site_by_errni
 define('SEARCHY_SITE_BY_ERRNIO_OPTION_NAME_TAGID', 'errnio_id');
 define('SEARCHY_SITE_BY_ERRNIO_OPTION_NAME_TAGTYPE', 'errnio_id_type');
 
+define('SEARCHY_SITE_BY_ERRNIO_OPTION_NAME_TAGID_LEGACY', 'errnio_api');
+define('SEARCHY_SITE_BY_ERRNIO_OPTION_NAME_TAGTYPE_LEGACY', 'errnio_api_type');
+
 define('SEARCHY_SITE_BY_ERRNIO_EVENT_NAME_ACTIVATE', 'wordpress_activated');
 define('SEARCHY_SITE_BY_ERRNIO_EVENT_NAME_DEACTIVATE', 'wordpress_deactivated');
 define('SEARCHY_SITE_BY_ERRNIO_EVENT_NAME_UNINSTALL', 'wordpress_uninstalled');
@@ -63,12 +66,34 @@ function searchy_site_by_errnio_create_tagid() {
 	return NULL;
 }
 
+function searchy_site_by_errnio_convert_legacy_options() {
+	$tagtype = get_option(SEARCHY_SITE_BY_ERRNIO_OPTION_NAME_TAGTYPE_LEGACY);
+	$tagId = get_option(SEARCHY_SITE_BY_ERRNIO_OPTION_NAME_TAGID_LEGACY);
+
+	// This is to make sure these are not empty
+	if ($tagtype == SEARCHY_SITE_BY_ERRNIO_TAGTYPE_PERM || $tagtype == SEARCHY_SITE_BY_ERRNIO_TAGTYPE_TEMP) {
+		add_option(SEARCHY_SITE_BY_ERRNIO_OPTION_NAME_TAGID, $tagId);
+		add_option(SEARCHY_SITE_BY_ERRNIO_OPTION_NAME_TAGTYPE, $tagtype);
+	}
+
+	if ($tagtype == SEARCHY_SITE_BY_ERRNIO_TAGTYPE_PERM) {
+		return false;
+	} else if ($tagtype == SEARCHY_SITE_BY_ERRNIO_TAGTYPE_TEMP) {
+		return true;
+	}
+}
+
 function searchy_site_by_errnio_check_need_register() {
 	$tagtype = get_option(SEARCHY_SITE_BY_ERRNIO_OPTION_NAME_TAGTYPE);
 	$needregister = true;
 	
 	if ($tagtype == SEARCHY_SITE_BY_ERRNIO_TAGTYPE_PERM) {
 		$needregister = false;
+	} else if ($tagtype == SEARCHY_SITE_BY_ERRNIO_TAGTYPE_TEMP) {
+		$needregister = true;
+	} else {
+		// No such options - need to check legacy
+		$needregister = searchy_site_by_errnio_convert_legacy_options();
 	}
 	
 	return $needregister;
